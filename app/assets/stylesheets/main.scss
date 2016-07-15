@@ -733,7 +733,7 @@ div.feed_link_main {
   padding:0.5em 0;
 }
 
-.alert{
+.popup{
   background-color:#D5FFD8;
   border:solid 3px #16C132;
   z-index:2000;
@@ -742,22 +742,22 @@ div.feed_link_main {
   margin-top:2px;
 }
 
-.alert .alert__content{
+.popup .popup__content{
   margin:0.5em;
   width: 95%;
   float: left;
 }
 
-.alert p {
+.popup p {
   margin: 0;
 }
 
-.alert h2,.alert h3 {
+.popup h2,.popup h3 {
   margin:0.5em 0;
 }
 
 
-.alert .alert__close {
+.popup .popup__close {
   color:#FFF;
   text-decoration:none;
   display:inline-block;
@@ -1709,7 +1709,7 @@ div.controller_help h1 a,#logged_in_bar a,#logged_in_bar a:visited,#stepwise_mak
   margin-bottom:10px;
 }
 
-div.ff-icon-printfix,.comment_in_request_text img.comment_quote,body.front .alert,.alert,div#show_response_view p.event_actions, div.batch_public_body_toggle {
+div.ff-icon-printfix,.comment_in_request_text img.comment_quote,body.front .popup,.popup,div#show_response_view p.event_actions, div.batch_public_body_toggle {
   display:none;
 }
 

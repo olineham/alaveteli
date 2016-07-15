@@ -1,11 +1,11 @@
 $(document).ready(function() {
  // flash message for people coming from other countries
  var htmlWrapperFront = [
-                          '<div class="alert alert--alert alert--locality" role="alert" id="locality-alert">',
-                          ' <div class="alert__content">',
+                          '<div class="popup popup--popup popup--locality" role="alert" id="locality-popup">',
+                          ' <div class="popup__content">',
                         ];
  var htmlWrapperBack = [
-                          '   <a href="#top" class="alert__close js-alert__close" aria-label="close">',
+                          '   <a href="#top" class="popup__close js-popup__close" aria-label="close">',
                           '     <span aria-hidden="true">&times;</span>',
                           '   </a>',
                           ' </div>',
@@ -21,22 +21,22 @@ if(window.location.search.substring(1).search("country_name") == -1) {
         if (country_message != ''){
           wholeMessage = htmlWrapperFront.join('') + country_message + htmlWrapperBack.join('');
           $('#country-message').html(wholeMessage);
-          $('body:not(.front) #locality-alert').show()
+          $('body:not(.front) #locality-popup').show()
         }
       }
     })
   }
 }
 
- // alerts
-$('#locality-alert .js-alert__close').click(function() {
-  $('#locality-alert').hide('slow');
+ // popups
+$('#locality-popup .js-popup__close').click(function() {
+  $('#locality-popup').hide('slow');
   $.cookie('has_seen_country_message', 1, {expires: 365, path: '/'});
   return false;
 });
 
-$('#standard-alert .js-alert__close').click(function() {
-  $('#standard-alert').hide('slow');
+$('#standard-popup .js-popup__close').click(function() {
+  $('#standard-popup').hide('slow');
   $.cookie('seen_foi2', 1, { expires: 7, path: '/' });
   return false;
 });
@@ -60,7 +60,7 @@ $('#standard-alert .js-alert__close').click(function() {
    })
 
    if($.cookie('seen_foi2') == 1) {
-     //$('#standard-alert').hide();
+     //$('#standard-popup').hide();
    }
 
   // "Create widget" page
