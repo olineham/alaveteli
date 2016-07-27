@@ -104,3 +104,14 @@ $(document).ready(function() {
     });
   }
 })
+
+
+$(document).ready(function() {
+  $('.after-actions__action-menu').dropit({
+    submenuEl: '.action-menu__menu'
+  });
+
+  if ($('body').hasClass('no-js')) {
+    $('body').removeClass('no-js').addClass('js-loaded');
+  }
+});
