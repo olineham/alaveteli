@@ -138,7 +138,10 @@
             <%= _('to {{public_body}}',:public_body=>public_body_link(@info_request.public_body)) %>
           <% end %>
         </p>
-        <%= render :partial => 'after_actions' %>
+        <div class="request-header__toolbar-actions">
+          <%= render :partial => 'after_actions' %>
+          <%= render :partial => 'track/tracking_links_simple', :locals => { :track_thing => @track_thing, :own_request => @info_request.user && @info_request.user == @user, :location => 'toolbar ' } %>
+        </div>
       </div>
     </div>
   </div>
