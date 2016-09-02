@@ -108,7 +108,7 @@ module InfoRequestHelper
     info_request = opts.fetch(:info_request)
     is_owning_user = opts.fetch(:is_owning_user)
 
-    str = ''
+    str = ''.html_safe
 
     if is_owning_user && !info_request.is_external?
       str += _('{{authority_name}} is <strong>waiting for your clarification' \
