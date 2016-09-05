@@ -138,10 +138,12 @@
             <%= _('to {{public_body}}',:public_body=>public_body_link(@info_request.public_body)) %>
           <% end %>
         </p>
-        <div class="request-header__toolbar-actions">
-          <%= render :partial => 'after_actions' %>
-          <%= render :partial => 'track/tracking_links_simple', :locals => { :track_thing => @track_thing, :own_request => @info_request.user && @info_request.user == @user, :location => 'toolbar ' } %>
-        </div>
+        <% unless @render_to_file %>
+          <div class="request-header__toolbar-actions">
+            <%= render :partial => 'after_actions' %>
+            <%= render :partial => 'track/tracking_links_simple', :locals => { :track_thing => @track_thing, :own_request => @info_request.user && @info_request.user == @user, :location => 'toolbar ' } %>
+          </div>
+        <% end %>
       </div>
     </div>
   </div>
