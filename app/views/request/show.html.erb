@@ -106,9 +106,10 @@
           <% end %>
         <% end %>
       <% else %>
-        <%= status_text(@status, :info_request => @info_request,
-                                 :is_owning_user => @is_owning_user,
-                                 :redirect_to => request.fullpath) %>
+        <%= status_text(@info_request.calculate_status,
+                        :info_request => @info_request,
+                        :is_owning_user => @is_owning_user,
+                        :redirect_to => request.fullpath) %>
       <% end %>
     </p>
   </div>
