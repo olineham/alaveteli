@@ -1556,6 +1556,7 @@ describe OutgoingMessage do
         before do
           allow(AlaveteliConfiguration).
             to receive(:mta_log_type).and_return('exim')
+          allow_any_instance_of(MailServerLog).to receive(:save)
         end
 
         it 'returns a delivery status for the most recent line with a parsable status' do
@@ -1609,6 +1610,7 @@ describe OutgoingMessage do
       before do
         allow(AlaveteliConfiguration).
           to receive(:mta_log_type).and_return('postfix')
+        allow_any_instance_of(MailServerLog).to receive(:save)
       end
 
       it 'returns a delivery status for a deferred message' do

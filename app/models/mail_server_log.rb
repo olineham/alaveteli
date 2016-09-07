@@ -218,7 +218,19 @@ class MailServerLog < ActiveRecord::Base
   end
 
   def delivery_status
-    @delivery_status ||= line(:decorate => true).delivery_status
+    # read in the status from the database if it's available
+    if attributes['delivery_status'].present?
+      DeliveryStatusSerializer.load(read_attribute(:delivery_status))
+    else
+      # attempt to parse the status from the log line and store if successful
+      decorated = line(:decorate => true)
+      if decorated && decorated.delivery_status
+        self.delivery_status = DeliveryStatusSerializer
+                                 .load(decorated.delivery_status)
+        save
+        decorated.delivery_status
+      end
+    end
   end
 
   private
