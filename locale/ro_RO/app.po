@@ -1075,9 +1075,6 @@ msgstr "De la:"
 msgid "GIVE DETAILS ABOUT YOUR COMPLAINT HERE"
 msgstr "DĂ DETALII DESPRE PLÂNGEREA TA AICI"
 
-msgid "Get answers from the government and public sector"
-msgstr ""
-
 msgid "Got an account?"
 msgstr "Aveți un utilizator?"
 
@@ -1565,9 +1562,6 @@ msgstr "Creează o solicitare"
 
 msgid "Make a request &raquo;"
 msgstr "Creează o solicitare &raquo;"
-
-msgid "Make a request for information to a public authority: by law, they have to respond"
-msgstr ""
 
 msgid "Make a request to these authorities"
 msgstr "Creează o solicitare acestor autorități"
@@ -3454,11 +3448,7 @@ msgid "Waiting for the public authority to reply"
 msgstr "Aşteaptă răspunsul autorităţii publice"
 
 msgid "Want to know something?"
-<<<<<<< HEAD
-msgstr ""
-=======
 msgstr "Vrei să afli ceva?"
->>>>>>> 02727a514303ab63c8c0c54ee37314a57bf945cb
 
 msgid "Was the response you got to your FOI request any good?"
 msgstr "Răspunsul pe care l-ai primit la solicitarea de acces la informații a fost de folos?"

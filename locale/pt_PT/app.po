@@ -1091,9 +1091,6 @@ msgstr "De:"
 msgid "GIVE DETAILS ABOUT YOUR COMPLAINT HERE"
 msgstr "DÊ DETALHES SOBRE SUA QUEIXA AQUI"
 
-msgid "Get answers from the government and public sector"
-msgstr ""
-
 msgid "Got an account?"
 msgstr "Tem uma conta?"
 
@@ -1585,9 +1582,6 @@ msgstr "Criar uma solicitação"
 
 msgid "Make a request &raquo;"
 msgstr "Para um pedido &raquo;"
-
-msgid "Make a request for information to a public authority: by law, they have to respond"
-msgstr ""
 
 msgid "Make a request to these authorities"
 msgstr "Faça um pedido a estas entidades"

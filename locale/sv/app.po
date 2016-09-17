@@ -481,9 +481,6 @@ msgstr "Börjar med"
 msgid "Browse <a href=\"{{requests_url}}\">{{number_of_requests}} requests</a> to <a href=\"{{authorities_url}}\">{{number_of_authorities}} authorities</a>"
 msgstr "Bläddra bland <a href=\"{{requests_url}}\">{{number_of_requests}} förfrågningar</a> till <a href=\"{{authorities_url}}\">{{number_of_authorities}} myndigheter</a>"
 
-msgid "Browse <a href=\"{{requests_url}}\">{{number_of_requests}} requests</a> to <a href=\"{{authorities_url}}\">{{number_of_authorities}} authorities</a>"
-msgstr ""
-
 msgid "Browse <a href='{{url}}'>other requests</a> for examples of how to word your request."
 msgstr "Bläddra bland <a href='{{url}}'>andra förfrågningar</a> för exempel på hur du kan formulera din begäran."
 
@@ -1059,9 +1056,6 @@ msgstr "Från:"
 msgid "GIVE DETAILS ABOUT YOUR COMPLAINT HERE"
 msgstr "UPPGE DETALJER OM DITT KLAGOMÅL HÄR"
 
-msgid "Get answers from the government and public sector"
-msgstr ""
-
 msgid "Got an account?"
 msgstr "Har du ett konto?"
 
@@ -1547,9 +1541,6 @@ msgstr "Gör en begäran"
 
 msgid "Make a request &raquo;"
 msgstr "Gör en begäran &raquo;"
-
-msgid "Make a request for information to a public authority: by law, they have to respond"
-msgstr ""
 
 msgid "Make a request to these authorities"
 msgstr "Gör en begäran till de här myndigheterna"
@@ -2554,9 +2545,6 @@ msgstr "SpamAddress|Email"
 msgid "Start your own request"
 msgstr "Starta din egen begäran"
 
-msgid "Start your own request"
-msgstr ""
-
 msgid "Stay up to date"
 msgstr "Håll dig uppdaterad"
 
@@ -3435,9 +3423,6 @@ msgstr "Väntar på den offentliga myndigheten att svara"
 
 msgid "Want to know something?"
 msgstr "Vill du veta något?"
-
-msgid "Want to know something?"
-msgstr ""
 
 msgid "Was the response you got to your FOI request any good?"
 msgstr "Var det svar du fick på din begäran om allmän handling något bra?"
