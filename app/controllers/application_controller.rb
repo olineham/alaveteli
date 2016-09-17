@@ -133,7 +133,7 @@ class ApplicationController < ActionController::Base
   # is not replayable forever
   SESSION_TTL = 3.hours
   def validate_session_timestamp
-    if session[:user_id] && session.key?(:ttl) && session[:ttl] < SESSION_TTL.ago
+    if session[:user_id] && session[:ttl] && session[:ttl] < SESSION_TTL.ago
       clear_session_credentials
     end
   end
@@ -151,6 +151,7 @@ class ApplicationController < ActionController::Base
     session[:admin_name] = nil
     session[:change_password_post_redirect_id] = nil
     session[:post_redirect_token] = nil
+    session[:ttl] = nil
   end
 
   def render_not_found(exception)
@@ -187,7 +188,7 @@ class ApplicationController < ActionController::Base
       Rails.logger.fatal("#{message}\n\n")
 
       if !AlaveteliConfiguration.exception_notifications_from.blank? && !AlaveteliConfiguration.exception_notifications_to.blank?
-        ExceptionNotifier::Notifier.exception_notification(request.env, exception).deliver
+        ExceptionNotifier.notify_exception(exception, :env => request.env)
       end
       @status = 500
     end
@@ -198,11 +199,13 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def render_hidden(template='request/hidden')
+  def render_hidden(template='request/hidden', opts = {})
+    response_code = opts.delete(:response_code) { 403 } # forbidden
+    options = { :template => template, :status => response_code }.merge(opts)
+
     respond_to do |format|
-      response_code = 403 # forbidden
-      format.html{ render :template => template, :status => response_code }
-      format.any{ render :nothing => true, :status => response_code }
+      format.html { render(options) }
+      format.any { render :nothing => true, :status => response_code }
     end
     false
   end
@@ -450,7 +453,7 @@ class ApplicationController < ActionController::Base
       rescue RuntimeError => e
         if e.message =~ /^QueryParserError: Wildcard/
           # Wildcard expands to too many terms
-          logger.info "Wildcard query '#{query.strip + '*'}' caused: #{e.message}"
+          logger.info "Wildcard query '#{query.strip + '*'}' caused: #{e.message.force_encoding('UTF-8')}"
 
           user_query =  ActsAsXapian.query_parser.parse_query(
             query,

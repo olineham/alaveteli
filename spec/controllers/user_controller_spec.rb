@@ -31,31 +31,6 @@ describe UserController do
 
   end
 
-  describe 'POST set_profile_about_me' do
-
-    context 'user is banned' do
-
-      before(:each) do
-        @user = FactoryGirl.create(:user, :ban_text => 'Causing trouble')
-        session[:user_id] = @user.id
-
-        post :set_profile_about_me, :submitted_about_me => '1',
-          :about_me => 'Bad stuff'
-      end
-
-      it 'redirects to the profile page' do
-        expect(response).to redirect_to(set_profile_about_me_path)
-      end
-
-      it 'renders an error message' do
-        msg = 'Banned users cannot edit their profile'
-        expect(flash[:error]).to eq(msg)
-      end
-
-    end
-
-  end
-
   describe 'GET confirm' do
 
     context 'if the post redirect cannot be found' do
@@ -350,6 +325,31 @@ describe UserController, "when showing a user" do
 
   end
 
+  context 'when the user being shown is logged in' do
+
+    it "assigns the user's undescribed requests" do
+      info_request = FactoryGirl.create(:info_request, :user => @user)
+      allow_any_instance_of(User).
+        to receive(:get_undescribed_requests).
+          and_return([info_request])
+      get :show, {:url_name => @user.url_name, :view => 'requests'}, {:user_id => @user.id}
+      expect(assigns[:undescribed_requests]).to eq([info_request])
+    end
+
+    it "assigns the user's track things" do
+      search_track = FactoryGirl.create(:search_track, :tracking_user => @user)
+      get :show, {:url_name => @user.url_name, :view => 'requests'}, {:user_id => @user.id}
+      expect(assigns[:track_things]).to eq([search_track])
+    end
+
+    it "assigns the user's grouped track things" do
+      search_track = FactoryGirl.create(:search_track, :tracking_user => @user)
+      get :show, {:url_name => @user.url_name, :view => 'requests'}, {:user_id => @user.id}
+      expect(assigns[:track_things_grouped]).to eq({'search_query' => [search_track]})
+    end
+
+  end
+
   context "when viewing a user's own requests" do
 
     render_views
@@ -382,8 +382,8 @@ describe UserController, "when showing a user" do
                          :event_type => 'comment',
                          :comment => comment2,
                          :info_request => shown_request)
-      expect(@user.comments.size).to eq(2)
-      expect(@user.comments.visible.size).to eq(1)
+      expect(@user.reload.comments.size).to eq(2)
+      expect(@user.reload.comments.visible.size).to eq(1)
       update_xapian_index
 
       make_request
@@ -448,37 +448,9 @@ describe UserController, "when signing in" do
     post_redirects[0]
   end
 
-  context "when checking whether to use reCAPTCHA" do
-    before do
-      allow(controller).to receive(:country_from_ip).
-        and_return(AlaveteliConfiguration::iso_country_code)
-    end
-
-    it "uses reCAPTCHA if USE_RECAPTCHA_FOR_REGISTRATION is set in config" do
-      allow(AlaveteliConfiguration).to receive(:use_recaptcha_for_registration).
-        and_return(true)
-      get :signin
-
-      expect(assigns[:use_recaptcha]).to eq(true)
-    end
-
-    it "uses reCAPTCHA if country_from_ip does not match" do
-      allow(controller).to receive(:country_from_ip).and_return('xx')
-      get :signin
-
-      expect(assigns[:use_recaptcha]).to eq(true)
-    end
-
-    it "does not use reCAPTCHA with default settings and country_from_ip match" do
-      get :signin
-      expect(assigns[:use_recaptcha]).to eq(false)
-    end
-
-  end
-
   it "should show sign in / sign up page" do
     get :signin
-    expect(response.body).to have_css("input#signin_token")
+    expect(response.body).to have_css("input#signin_token", :visible => :hidden)
   end
 
   it "should create post redirect to / when you just go to /signin" do
@@ -529,14 +501,56 @@ describe UserController, "when signing in" do
     expect(assigns[:post_redirect]).to eq(nil)
   end
 
-  # No idea how to test this in the test framework :(
-  #    it "should have set a long lived cookie if they picked remember me, session cookie if they didn't" do
-  #        get :signin, :r => "/list"
-  #        response.should render_template('sign')
-  #        post :signin, { :user_signin => { :email => 'bob@localhost', :password => 'jonespassword' } }
-  #        session[:user_id].should == users(:bob_smith_user).id
-  #        raise session.options.to_yaml # check cookie lasts a month
-  #    end
+  it "sets a the cookie expiry to nil on next page load" do
+    load_raw_emails_data
+    get_fixtures_xapian_index
+    post :signin, { :user_signin => { :email => 'bob@localhost',
+                                      :password => 'jonespassword' } }
+    get :show, :url_name => users(:bob_smith_user).url_name
+    expect(request.env['rack.session.options'][:expire_after]).to be_nil
+  end
+
+  context "checking 'remember_me'" do
+    let(:user) do
+      FactoryGirl.create(:user,
+                         :password => 'password',
+                         :email_confirmed => true)
+    end
+
+    def do_signin(email, password)
+      post :signin, { :user_signin => { :email => email,
+                                        :password => password },
+                      :remember_me => "1" }
+    end
+
+    before do
+      # fake an expired previous session which has not been reset
+      # (i.e. it timed out rather than the user signing out manually)
+      session[:ttl] = Time.now - 2.months
+    end
+
+    it "logs the user in" do
+      do_signin(user.email, 'password')
+      expect(session[:user_id]).to eq(user.id)
+    end
+
+    it "sets session[:remember_me] to true" do
+      do_signin(user.email, 'password')
+      expect(session[:remember_me]).to eq(true)
+    end
+
+    it "clears the session[:ttl] value" do
+      do_signin(user.email, 'password')
+      expect(session[:ttl]).to be_nil
+    end
+
+    it "sets a long lived cookie on next page load" do
+      do_signin(user.email, 'password')
+      get :show, :url_name => user.url_name
+      expect(request.env['rack.session.options'][:expire_after]).to eq(1.month)
+    end
+
+  end
 
   it "should ask you to confirm your email if it isn't confirmed, after log in" do
     get :signin, :r => "/list"
@@ -745,6 +759,13 @@ describe UserController, "when signing out" do
     expect(response).to redirect_to(:controller => 'request', :action => 'list')
   end
 
+  it "clears the session ttl" do
+    session[:user_id] = users(:bob_smith_user).id
+    session[:ttl] = Time.now
+    get :signout
+    expect(session[:ttl]).to be_nil
+  end
+
 end
 
 describe UserController, "when sending another user a message" do
@@ -780,7 +801,7 @@ describe UserController, "when sending another user a message" do
     expect(mail.body).to include("Bob Smith has used #{AlaveteliConfiguration::site_name} to send you the message below")
     expect(mail.body).to include("Just a test!")
     #mail.to_addrs.first.to_s.should == users(:silly_name_user).name_and_email # TODO: fix some nastiness with quoting name_and_email
-    expect(mail.from_addrs.first.to_s).to eq(users(:bob_smith_user).email)
+    expect(mail.header['Reply-To'].to_s).to match(users(:bob_smith_user).email)
   end
 
 end

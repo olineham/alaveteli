@@ -24,6 +24,8 @@ class GeneralController < ApplicationController
     @feed_autodetect = [ { :url => do_track_url(@track_thing, 'feed'),
                            :title => _('Successful requests'),
                            :has_json => true } ]
+
+    respond_to :html
   end
 
   # Display blog entries
@@ -33,6 +35,13 @@ class GeneralController < ApplicationController
     end
 
     medium_cache
+
+    get_blog_content
+
+    respond_to :html
+  end
+
+  def get_blog_content
     @feed_autodetect = []
     @feed_url = AlaveteliConfiguration::blog_feed
     separator = @feed_url.include?('?') ? '&' : '?'
@@ -77,6 +86,13 @@ class GeneralController < ApplicationController
   def search
     # TODO: Why is this so complicated with arrays and stuff? Look at the route
     # in config/routes.rb for comments.
+
+    # respond with a 404 and do not execute the search if request was not for html
+    if request.format && !request.format.html?
+      respond_to { |format| format.any { head :not_found } }
+      return
+    end
+
     combined = params[:combined].split("/")
     @sortby = nil
     @bodies = @requests = @users = true

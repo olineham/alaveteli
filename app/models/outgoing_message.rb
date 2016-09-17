@@ -75,14 +75,6 @@ class OutgoingMessage < ActiveRecord::Base
     _("Dear {{public_body_name}},", :public_body_name => public_body.name)
   end
 
-  def self.placeholder_salutation
-    warn %q([DEPRECATION] OutgoingMessage.placeholder_salutation will be
-            replaced with
-            OutgoingMessage::Template::BatchRequest.placeholder_salutation as of
-            0.25).squish
-    Template::BatchRequest.placeholder_salutation
-  end
-
   def self.fill_in_salutation(text, public_body)
     text.gsub(Template::BatchRequest.placeholder_salutation,
               default_salutation(public_body))
@@ -171,6 +163,10 @@ class OutgoingMessage < ActiveRecord::Base
     read_attribute(:body)
   end
 
+  def apply_masks(text, content_type)
+    info_request.apply_masks(text, content_type)
+  end
+
   # Used to give warnings when writing new messages
   def contains_email?
     MySociety::Validate.email_find_regexp.match(body)
@@ -178,6 +174,10 @@ class OutgoingMessage < ActiveRecord::Base
 
   def contains_postcode?
     MySociety::Validate.contains_postcode?(body)
+  end
+
+  def is_owning_user?(user)
+    info_request.is_owning_user?(user)
   end
 
   def record_email_delivery(to_addrs, message_id, log_event_type = 'sent')
@@ -224,7 +224,6 @@ class OutgoingMessage < ActiveRecord::Base
   end
 
   # Public: Return logged MTA IDs for this OutgoingMessage.
-  # Currently only implemented for exim.
   #
   # Returns an Array
   def mta_ids
@@ -232,14 +231,13 @@ class OutgoingMessage < ActiveRecord::Base
     when :exim
       exim_mta_ids
     when :postfix
-      []
+      postfix_mta_ids
     else
       raise 'Unexpected MTA type'
     end
   end
 
   # Public: Return the MTA logs for this message.
-  # Currently only implemented for exim.
   #
   # Returns an Array.
   def mail_server_logs
@@ -247,10 +245,17 @@ class OutgoingMessage < ActiveRecord::Base
     when :exim
       exim_mail_server_logs
     when :postfix
-      []
+      postfix_mail_server_logs
     else
       raise 'Unexpected MTA type'
     end
+  end
+
+  def delivery_status
+    mail_server_logs.
+      map { |log| log.line(:decorate => true).delivery_status }.
+        compact.
+          last
   end
 
   # An admin function
@@ -321,56 +326,6 @@ class OutgoingMessage < ActiveRecord::Base
       info_request_events.each do |event|
         event.xapian_mark_needs_index
       end
-    end
-  end
-
-  # How the default letter starts and ends
-  def get_salutation
-    warn %q([DEPRECATION] OutgoingMessage#get_salutation will be replaced with
-            OutgoingMessage::Template classes in 0.25).squish
-
-    if info_request.is_batch_request_template?
-      return OutgoingMessage.placeholder_salutation
-    end
-
-    ret = ""
-    if replying_to_incoming_message?
-      ret += OutgoingMailer.name_for_followup(info_request, incoming_message_followup)
-    else
-      return OutgoingMessage.default_salutation(info_request.public_body)
-    end
-    salutation = _("Dear {{public_body_name}},", :public_body_name => ret)
-  end
-
-  def get_signoff
-    warn %q([DEPRECATION] OutgoingMessage#get_signoff will be replaced with
-            OutgoingMessage::Template classes in 0.25).squish
-    
-    if replying_to_incoming_message?
-      _("Yours sincerely,")
-    else
-      _("Yours faithfully,")
-    end
-  end
-
-  def get_default_letter
-    warn %q([DEPRECATION] OutgoingMessage#get_default_letter will be replaced
-            with OutgoingMessage::Template classes in 0.25).squish
-    
-    return default_letter if default_letter
-
-    if what_doing == 'internal_review'
-      letter = _("Please pass this on to the person who conducts Freedom of Information reviews.")
-      letter += "\n\n"
-      letter += _("I am writing to request an internal review of {{public_body_name}}'s handling of my FOI request '{{info_request_title}}'.",
-                  :public_body_name => info_request.public_body.name,
-                  :info_request_title => info_request.title)
-      letter += "\n\n\n\n [ #{ get_internal_review_insert_here_note } ] \n\n\n\n"
-      letter += _("A full history of my FOI request and all correspondence is available on the Internet at this address: {{url}}",
-                  :url => request_url(info_request))
-      letter += "\n"
-    else
-      ""
     end
   end
 
@@ -447,7 +402,7 @@ class OutgoingMessage < ActiveRecord::Base
   end
 
   def template_changed
-    if body.empty? || body =~ /\A#{Regexp.escape(letter_template.salutation(default_message_replacements))}\s+#{Regexp.escape(letter_template.signoff(default_message_replacements))}/ || body =~ /#{Regexp.escape(Template::InternalReview.details_placeholder)}/
+    if body.empty? || HTMLEntities.new.decode(raw_body) =~ /\A#{template_regex(letter_template.body(default_message_replacements))}/
       if message_type == 'followup'
         if what_doing == 'internal_review'
           errors.add(:body, _("Please give details explaining why you want a review"))
@@ -462,8 +417,17 @@ class OutgoingMessage < ActiveRecord::Base
     end
   end
 
+  def template_regex(template_text)
+    text = template_text.gsub("\r", "\n") # in case we have '\r\n' or even '\r's all the way down
+    # feels like this should need a gsub(/\//, '\/') but doesn't seem to
+    Regexp.escape(text.squeeze("\n")).
+      gsub("\\n", '\s*').
+      gsub('\ \s*', '\s*').
+      gsub('\s*\ ', '\s*')
+  end
+
   def body_has_signature
-    if body =~ /#{letter_template.signoff(default_message_replacements)}\s*\Z/m
+    if raw_body =~ /#{template_regex(letter_template.signoff(default_message_replacements))}\s*\Z/m
       errors.add(:body, _("Please sign at the bottom with your name, or alter the \"{{signoff}}\" signature", :signoff => letter_template.signoff(default_message_replacements)))
     end
   end
@@ -494,6 +458,25 @@ class OutgoingMessage < ActiveRecord::Base
   end
 
   def exim_mail_server_logs
+    mta_ids.flat_map do |mta_id|
+      info_request.
+        mail_server_logs.
+          where('line ILIKE :mta_id', mta_id: "%#{ mta_id }%")
+    end
+  end
+
+  def postfix_mta_ids
+    lines = smtp_message_ids.map do |smtp_message_id|
+      info_request.
+        mail_server_logs.
+          where("line ILIKE :q", q: "%#{ smtp_message_id }%").
+              last.
+                try(:line)
+    end
+    lines.compact.map { |line| line.split(' ')[5].strip.chomp(':') }
+  end
+
+  def postfix_mail_server_logs
     mta_ids.flat_map do |mta_id|
       info_request.
         mail_server_logs.
