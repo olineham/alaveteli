@@ -41,6 +41,9 @@ module AlaveteliConfiguration
       :INCOMING_EMAIL_DOMAIN => 'localhost',
       :INCOMING_EMAIL_PREFIX => 'foi+',
       :INCOMING_EMAIL_SECRET => 'dummysecret',
+      :INCOMING_EMAIL_SPAM_ACTION => false,
+      :INCOMING_EMAIL_SPAM_HEADER => 'X-Spam-Score',
+      :INCOMING_EMAIL_SPAM_THRESHOLD => false,
       :ISO_COUNTRY_CODE => 'GB',
       :MINIMUM_REQUESTS_FOR_STATISTICS => 100,
       :MAX_REQUESTS_PER_USER_PER_DAY => 6,
@@ -74,6 +77,7 @@ module AlaveteliConfiguration
       :TIME_ZONE => "UTC",
       :TRACK_SENDER_EMAIL => 'contact@localhost',
       :TRACK_SENDER_NAME => 'Alaveteli',
+      :FACEBOOK_USERNAME => '',
       :TWITTER_USERNAME => '',
       :TWITTER_WIDGET_ID => false,
       :USE_DEFAULT_BROWSER_LANGUAGE => true,
@@ -83,7 +87,6 @@ module AlaveteliConfiguration
       :VARNISH_HOST => '',
       :WORKING_OR_CALENDAR_DAYS => 'working',
       :USE_BULLET_IN_DEVELOPMENT => false,
-      :INCOMING_EMAIL_SPAM_ACTION => false,
       :EXTERNAL_REVIEWERS => ''
     }
   end

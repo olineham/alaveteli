@@ -431,7 +431,3 @@ describe TrackController do
 
   end
 end
-
-def mock_cookie
-  '0300fd3e1177127cebff'
-end

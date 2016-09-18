@@ -24,9 +24,6 @@ class ApplicationController < ActionController::Base
   rescue_from RouteNotFound, :with => :render_not_found
   rescue_from WillPaginate::InvalidPage, :with => :render_not_found
 
-  # Add some security-related headers (see config/initializers/secure_headers.rb)
-  ensure_security_headers
-
   # Standard headers, footers and navigation for whole site
   layout "default"
   include FastGettext::Translation # make functions like _, n_, N_ etc available)
@@ -186,16 +183,14 @@ class ApplicationController < ActionController::Base
       backtrace = Rails.backtrace_cleaner.clean(exception.backtrace, :silent)
       message << "  " << backtrace.join("\n  ")
       Rails.logger.fatal("#{message}\n\n")
-
       if !AlaveteliConfiguration.exception_notifications_from.blank? && !AlaveteliConfiguration.exception_notifications_to.blank?
         ExceptionNotifier.notify_exception(exception, :env => request.env)
       end
       @status = 500
     end
-
     respond_to do |format|
-      format.html { render :template => "general/exception_caught", :status => @status }
-      format.any { render :nothing => true, :status => @status }
+      format.html{ render :template => "general/exception_caught", :status => @status }
+      format.any{ render :nothing => true, :status => @status }
     end
   end
 
